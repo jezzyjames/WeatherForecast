@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  WeatherForecast
 //
-//  Created by Reetima on 9/7/2566 BE.
+//  Created by TasitS on 9/7/2566 BE.
 //
 
 import UIKit

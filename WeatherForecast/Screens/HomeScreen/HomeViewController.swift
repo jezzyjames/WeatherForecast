@@ -20,14 +20,14 @@ class HomeViewController: UIViewController {
     @IBOutlet weak var searchButton: UIButton!
     @IBOutlet weak var searchTextField: UITextField!
     
-    var homeViewControllerViewModel = HomeViewControllerViewModel()
+    var homeViewModel = HomeViewModel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setupView()
         
-        homeViewControllerViewModel.delegate = self
+        homeViewModel.delegate = self
         searchTextField.delegate = self
     }
     
@@ -44,21 +44,28 @@ class HomeViewController: UIViewController {
     }
     
     @objc func forecastTapped() {
-        
+        if let forecastViewController = UIStoryboard.init(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "forecastViewController") as? ForecastViewController {
+            if let cityName = homeViewModel.weatherModel?.cityName {
+                forecastViewController.forecastViewModel.cityName = cityName
+            }
+            forecastViewController.forecastViewModel.selectedTemperatureUnit = homeViewModel.selectedTemperatureUnit
+            
+            self.navigationController?.pushViewController(forecastViewController, animated: true)
+        }
     }
 
     @IBAction func searchWeatherPress(_ sender: UIButton) {
         if let location = searchTextField.text {
-            homeViewControllerViewModel.searchWeather(location: location)
+            homeViewModel.searchWeather(location: location)
         }
     }
     
     @IBAction func celciusButtonPress(_ sender: UIButton) {
-        homeViewControllerViewModel.selectedTemperatureUnit = .celcius
+        homeViewModel.selectedTemperatureUnit = .celcius
     }
     
     @IBAction func fahrenheitButtonPress(_ sender: UIButton) {
-        homeViewControllerViewModel.selectedTemperatureUnit = .fahrenheit
+        homeViewModel.selectedTemperatureUnit = .fahrenheit
     }
 }
 
@@ -68,7 +75,7 @@ extension HomeViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         searchTextField.resignFirstResponder()
         if let location = searchTextField.text {
-            homeViewControllerViewModel.searchWeather(location: location)
+            homeViewModel.searchWeather(location: location)
         }
         return true
     }
@@ -76,7 +83,7 @@ extension HomeViewController: UITextFieldDelegate {
 
 // MARK: - HomeViewControllerViewModelDelegate
 
-extension HomeViewController: HomeViewControllerViewModelDelgate {
+extension HomeViewController: HomeViewModelDelegate {
     func didSelectTemperatureUnit(newTemperatureValue: String, unit: TemperatureUnit) {
         self.temperatureLabel.text = newTemperatureValue
         self.celciusButton.isSelected = unit == .celcius ? true : false
@@ -86,8 +93,8 @@ extension HomeViewController: HomeViewControllerViewModelDelgate {
     func updateWeather(weatherModel: WeatherModel) {
         DispatchQueue.main.async {
             self.cityNameLabel.text = weatherModel.cityName
-            self.weatherImage.image = UIImage(systemName: weatherModel.conditionName)
-            self.temperatureLabel.text = self.homeViewControllerViewModel.selectedTemperatureUnit == .celcius ? weatherModel.stringTempCelcius : weatherModel.stringTempFahrenheit
+            self.weatherImage.image = weatherModel.iconImage
+            self.temperatureLabel.text = self.homeViewModel.selectedTemperatureUnit == .celcius ? weatherModel.stringTempCelcius : weatherModel.stringTempFahrenheit
             self.humidityLabel.text = "Humidity: " + weatherModel.stringHumidity + "%"
             
             self.weatherImage.isHidden = false
